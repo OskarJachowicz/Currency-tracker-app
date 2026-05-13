@@ -108,14 +108,13 @@ class MainActivity : ComponentActivity() {
 @PreviewScreenSizes
 @Composable
 fun Exchange_appApp() {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+    var navStack by rememberSaveable { mutableStateOf(listOf(AppDestinations.HOME)) }
     var selectedCurrency by rememberSaveable { mutableStateOf<String?>(null) }
-    var previousDestination by rememberSaveable { mutableStateOf<AppDestinations?>(null) }
 
-    // Obsługa systemowego przycisku powrotu, gdy jesteśmy w szczegółach
-    BackHandler(enabled = currentDestination == AppDestinations.DETAILS) {
-        currentDestination = previousDestination ?: AppDestinations.HOME
-        selectedCurrency = null
+    val currentDestination = navStack.last()
+
+    BackHandler(enabled = navStack.size > 1) {
+        navStack = navStack.dropLast(1)
     }
 
     val navSuiteItemColors = NavigationSuiteDefaults.itemColors(
@@ -130,7 +129,6 @@ fun Exchange_appApp() {
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             AppDestinations.entries.forEach {
-                // Wyświetlamy w navbarze tylko te elementy, które NIE są szczegółami
                 if (it != AppDestinations.DETAILS) {
                     item(
                         icon = {
@@ -142,9 +140,13 @@ fun Exchange_appApp() {
                         label = { Text(it.label) },
                         selected = it == currentDestination,
                         onClick = { 
-                            currentDestination = it
-                            selectedCurrency = null
-                            previousDestination = null
+                            if (it != currentDestination) {
+                                navStack = if (navStack.contains(it)) {
+                                    navStack.take(navStack.indexOf(it) + 1)
+                                } else {
+                                    navStack + it
+                                }
+                            }
                         },
                         colors = navSuiteItemColors
                     )
@@ -157,13 +159,15 @@ fun Exchange_appApp() {
                 when (currentDestination) {
                     AppDestinations.HOME -> MainScreen(onCurrencyClick = {
                         selectedCurrency = it
-                        previousDestination = AppDestinations.HOME
-                        currentDestination = AppDestinations.DETAILS
+                        if (navStack.last() != AppDestinations.DETAILS) {
+                            navStack = navStack + AppDestinations.DETAILS
+                        }
                     })
                     AppDestinations.FAVORITES -> FavouritesScreen(onCurrencyClick = {
                         selectedCurrency = it
-                        previousDestination = AppDestinations.FAVORITES
-                        currentDestination = AppDestinations.DETAILS
+                        if (navStack.last() != AppDestinations.DETAILS) {
+                            navStack = navStack + AppDestinations.DETAILS
+                        }
                     })
                     AppDestinations.DETAILS -> DetailsScreen(currencyCode = selectedCurrency)
                     AppDestinations.SETTINGS -> SettingScreen()
