@@ -27,9 +27,14 @@ class DailyRateWorker(
             val securityManager = SecurityManager(applicationContext)
             val repository = CurrencyRepository(app.api, applicationContext, networkHelper, securityManager)
 
-            repository.fetchAndSaveHistoricalRates("PLN")
-            repository.fetchAndSaveHistoricalRates("USD")
-            repository.fetchAndSaveHistoricalRates("EUR")
+            val success1 = repository.fetchAndSaveHistoricalRates("PLN")
+            val success2 = repository.fetchAndSaveHistoricalRates("USD")
+            val success3 = repository.fetchAndSaveHistoricalRates("EUR")
+
+            if (!success1 || !success2 || !success3) {
+                Log.e("Worker", "Błąd pobierania danych. Ponawiam próbę...")
+                return Result.retry()
+            }
 
             // --- testowanie workera ---
             val testSdf = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault())

@@ -22,8 +22,12 @@ class CurrencyRepository(
     private val followedFileName = "followed.txt"
     private val syncInfoFileName = "sync_info.txt"
 
-    suspend fun fetchAndSaveHistoricalRates(baseCode: String) {
-        val response = fetchRatesFromApi(baseCode) ?: return
+    /**
+     * Metoda wywoływana przez WorkManagera raz na 24h.
+     * Zapisuje dane DO HISTORII.
+     */
+    suspend fun fetchAndSaveHistoricalRates(baseCode: String): Boolean {
+        val response = fetchRatesFromApi(baseCode) ?: return false
         
         val now = Date()
         val dateOnly = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now)
@@ -33,6 +37,7 @@ class CurrencyRepository(
             val line = "$dateOnly,$baseCode,$targetCurrency,$rate\n"
             historicalFile.appendText(line)
         }
+        return true
     }
 
     suspend fun fetchAndSaveLatestRates(baseCode: String) {

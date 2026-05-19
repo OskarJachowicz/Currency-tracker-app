@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "DailyCurrencyFetch",
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             syncRequest
         )
     }
