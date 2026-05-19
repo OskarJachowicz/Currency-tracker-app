@@ -12,11 +12,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.exchange_app.CurrencyApplication
@@ -230,16 +233,20 @@ fun SettingScreen(modifier: Modifier = Modifier) {
 
         // Sekcja: Klucz API (przeniesiona poniżej przycisku)
         SettingsSection(title = "Klucz API", showDivider = false) {
+            var isFocused by remember { mutableStateOf(false) }
             OutlinedTextField(
                 value = apiKey,
                 onValueChange = { 
                     apiKey = it
                     securityManager.saveApiKey(it)
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { isFocused = it.isFocused },
                 label = { Text("Wpisz swój klucz API") },
                 singleLine = true,
-                placeholder = { Text("Klucz z exchangerate-api.com", modifier = Modifier.alpha(0.5f)) }
+                placeholder = { Text("Klucz z exchangerate-api.com", modifier = Modifier.alpha(0.5f)) },
+                visualTransformation = if (isFocused) VisualTransformation.None else PasswordVisualTransformation()
             )
         }
         
