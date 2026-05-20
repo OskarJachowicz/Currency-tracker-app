@@ -121,33 +121,48 @@ fun CurrencyItem(
     onToggleFollow: () -> Unit,
     onClick: () -> Unit
 ) {
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
+            .height(IntrinsicSize.Min)
             .background(CustomGray, RoundedCornerShape(6.dp))
             .clickable { onClick() }
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = currencyCode,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Medium
-        )
-        
-        Icon(
-            painter = if (isFollowed) painterResource(id = R.drawable.ic_star_followed) else painterResource(id = R.drawable.ic_favourite),
-            contentDescription = "Follow $currencyCode",
-            tint = if (isFollowed) CustomYellow else Color.White,
+        if (isFollowed) {
+            Box(
+                modifier = Modifier
+                    .width(6.dp)
+                    .fillMaxHeight()
+                    .background(CustomYellow, RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp))
+            )
+        }
+
+        Row(
             modifier = Modifier
-                .size(36.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    onToggleFollow()
-                }
-        )
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = currencyCode,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Medium
+            )
+            
+            Icon(
+                painter = if (isFollowed) painterResource(id = R.drawable.ic_star_followed) else painterResource(id = R.drawable.ic_favourite),
+                contentDescription = "Follow $currencyCode",
+                tint = if (isFollowed) CustomYellow else Color.White,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        onToggleFollow()
+                    }
+            )
+        }
     }
 }
