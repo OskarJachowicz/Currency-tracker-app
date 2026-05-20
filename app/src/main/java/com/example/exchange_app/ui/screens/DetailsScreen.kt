@@ -32,6 +32,7 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -65,16 +66,26 @@ fun DetailsScreen(
     val lastSyncTime = remember { repository.getLastSyncTime() }
     val decimalPlaces = settingsManager.getDecimalPlaces()
     
-    // Ładowanie danych historycznych w tłe (poprawia stabilność przy przełączaniu zakresów)
-    val historyData by produceState<List<RateModel>>(initialValue = emptyList(), currencyCode, selectedRange) {
-        value = withContext(Dispatchers.IO) {
-            if (currencyCode != null) repository.getHistoryForCurrency(currencyCode, selectedRange)
-            else emptyList()
-        }
-    }
-
     // Pobieramy walutę bazową z danych (domyślnie PLN jeśli brak danych)
     val baseCurrency = latestRate?.baseCurrency ?: "PLN"
+
+    // Ładowanie danych historycznych w tłe (poprawia stabilność przy przełączaniu zakresów)
+    val historyData by produceState<List<RateModel>>(initialValue = emptyList(), currencyCode, selectedRange, baseCurrency) {
+        value = withContext(Dispatchers.IO) {
+            if (currencyCode != null) {
+                val history = repository.getHistoryForCurrency(baseCurrency, currencyCode, selectedRange)
+                val latest = latestRate
+                
+                // Jeśli w historii brakuje dzisiejszego wpisu (bo WorkManager jeszcze nie ruszył),
+                // a mamy go w latestRate, to doklejamy go do wykresu
+                if (latest != null && (history.isEmpty() || history.last().date != latest.date)) {
+                    history + latest
+                } else {
+                    history
+                }
+            } else emptyList()
+        }
+    }
 
     // Obliczanie zmiany wartości względem poprzedniego dnia
     val valueChange = remember(currencyCode) {
@@ -242,10 +253,24 @@ fun VicoChart(data: List<RateModel>, decimalPlaces: Int) {
         }
     }
 
-    // 5. Rysowanie wykresu nowym silnikiem Cartesian
+    val rates = data.map { it.rate }
+    val minVal = rates.minOrNull() ?: 0.0
+    val maxVal = rates.maxOrNull() ?: 1.0
+
+    val rangeProvider = remember(minVal, maxVal) {
+        val mid = (minVal + maxVal) / 2.0
+        CartesianLayerRangeProvider.fixed(
+            minY = mid - 1.0,
+            maxY = mid + 1.0
+        )
+    }
+
+    // 6. Rysowanie wykresu nowym silnikiem Cartesian
     CartesianChartHost(
         chart = rememberCartesianChart(
-            rememberLineCartesianLayer(), // Rysuje linię
+            rememberLineCartesianLayer(
+                rangeProvider = rangeProvider
+            ), // Rysuje linię
             startAxis = VerticalAxis.rememberStart(
                 valueFormatter = startAxisFormatter
             ),

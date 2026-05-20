@@ -117,18 +117,24 @@ class CurrencyRepository(
     }
 
     /**
-     * Pobiera historię kursów dla konkretnej waluty w danym zakresie dni.
+     * Pobiera historię kursów dla konkretnej pary walutowej w danym zakresie dni.
      */
-    fun getHistoryForCurrency(targetCurrency: String, days: Int): List<RateModel> {
+    fun getHistoryForCurrency(baseCurrency: String, targetCurrency: String, days: Int): List<RateModel> {
         val allHistory = getHistoricalRates()
         val now = System.currentTimeMillis()
-        val limit = now - (days.toLong() * 24 * 60 * 60 * 1000)
+        
+        // Zwiększamy zakres o 12h, aby na pewno "złapać" wpis z dnia granicznego
+        val limit = now - (days.toLong() * 24 * 60 * 60 * 1000) - (24 * 60 * 60 * 1000)
         
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         
         return allHistory.filter { 
+            it.baseCurrency == baseCurrency && 
             it.targetCurrency == targetCurrency && 
-            try { sdf.parse(it.date)?.time ?: 0L >= limit } catch (e: Exception) { false }
+            try { 
+                val time = sdf.parse(it.date)?.time ?: 0L
+                time >= limit 
+            } catch (e: Exception) { false }
         }.sortedBy { it.date }
     }
 
