@@ -69,15 +69,19 @@ fun DetailsScreen(
     // Pobieramy walutę bazową z danych (domyślnie PLN jeśli brak danych)
     val baseCurrency = latestRate?.baseCurrency ?: "PLN"
 
-    // Ładowanie danych historycznych w tłe (poprawia stabilność przy przełączaniu zakresów)
-    val historyData by produceState<List<RateModel>>(initialValue = emptyList(), currencyCode, selectedRange, baseCurrency) {
-        value = withContext(Dispatchers.IO) {
+    // ZMIANA: Stały stan, który nie czyści się do zera przy każdej zmianie zakresu
+    var historyData by remember { mutableStateOf<List<RateModel>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    // Pobieranie danych w sposób ciągły (poprawia stabilność przy przełączaniu zakresów)
+    LaunchedEffect(currencyCode, selectedRange, baseCurrency, latestRate) {
+        isLoading = true
+        val newData = withContext(Dispatchers.IO) {
             if (currencyCode != null) {
                 val history = repository.getHistoryForCurrency(baseCurrency, currencyCode, selectedRange)
                 val latest = latestRate
                 
-                // Jeśli w historii brakuje dzisiejszego wpisu (bo WorkManager jeszcze nie ruszył),
-                // a mamy go w latestRate, to doklejamy go do wykresu
+                // Jeśli w historii brakuje dzisiejszego wpisu, a mamy go w latestRate, doklejamy go
                 if (latest != null && (history.isEmpty() || history.last().date != latest.date)) {
                     history + latest
                 } else {
@@ -85,6 +89,8 @@ fun DetailsScreen(
                 }
             } else emptyList()
         }
+        historyData = newData
+        isLoading = false
     }
 
     // Obliczanie zmiany wartości względem poprzedniego dnia
@@ -192,19 +198,25 @@ fun DetailsScreen(
                 .background(CustomGray.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
                 .padding(16.dp)
         ) {
+            // Wykres zostaje na ekranie, dopóki ma co najmniej 2 punkty
             if (historyData.size >= 2) {
-                VicoChart(historyData, decimalPlaces)
-            } else if (historyData.isEmpty() && selectedRange > 0) {
-                // Pokazujemy loader podczas ładowania z tła
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = CustomYellow
-                )
-            } else {
+                // key(historyData.size) wymusza bezpieczne odświeżenie przy drastycznych zmianach wielkości danych
+                key(historyData.size) {
+                    VicoChart(historyData, decimalPlaces)
+                }
+            } else if (!isLoading) {
                 Text(
                     text = "Zbyt mało danych do wykresu",
                     modifier = Modifier.align(Alignment.Center),
                     color = Color.Gray
+                )
+            }
+            
+            // Loader pokazuje się niezależnie od wykresu (zapobiega migotaniu)
+            if (isLoading && historyData.isEmpty()) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = CustomYellow
                 )
             }
         }
