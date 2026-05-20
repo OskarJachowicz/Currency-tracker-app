@@ -11,11 +11,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.res.Configuration
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.example.exchange_app.CurrencyApplication
 import com.example.exchange_app.R
 import com.example.exchange_app.data.SecurityManager
@@ -42,6 +46,8 @@ fun DetailsScreen(
     currencyCode: String? = null
 ) {
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val app = context.applicationContext as CurrencyApplication
     val settingsManager = remember { SettingsManager(context) }
     
@@ -59,7 +65,7 @@ fun DetailsScreen(
         "PLN" to "Złoty polski"
     )
 
-    var selectedRange by remember { mutableIntStateOf(1) } // 1, 7, 30 dni
+    var selectedRange by rememberSaveable { mutableIntStateOf(1) } // 1, 7, 30 dni
     val latestRate = remember(currencyCode) { 
         repository.getLatestRates().find { it.targetCurrency == currencyCode } 
     }
@@ -133,19 +139,25 @@ fun DetailsScreen(
 
         // Kurs i Data
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (isLandscape) Modifier.heightIn(min = 180.dp) else Modifier),
             colors = CardDefaults.cardColors(containerColor = CustomGray),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = if (latestRate != null) String.format("%.${decimalPlaces}f", latestRate.rate) else "---",
                     fontSize = 42.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.White,
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -158,7 +170,8 @@ fun DetailsScreen(
                 Text(
                     text = "Ostatnia aktualizacja: $lastSyncTime",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center
                 )
             }
         }
