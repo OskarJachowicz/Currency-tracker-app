@@ -156,7 +156,9 @@ fun SettingScreen(modifier: Modifier = Modifier) {
                         readOnly = true,
                         label = { Text("Jednostka") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
@@ -208,8 +210,12 @@ fun SettingScreen(modifier: Modifier = Modifier) {
         Button(
             onClick = {
                 scope.launch {
-                    repository.fetchAndSaveLatestRates(baseCurrency)
-                    Toast.makeText(context, "Dane zostały odświeżone", Toast.LENGTH_SHORT).show()
+                    val success = repository.fetchAndSaveLatestRates(baseCurrency)
+                    if (success) {
+                        Toast.makeText(context, "Dane zostały odświeżone", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Wystąpił błąd przy odświeżaniu", Toast.LENGTH_SHORT).show()
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(),

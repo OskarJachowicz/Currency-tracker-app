@@ -22,10 +22,6 @@ class CurrencyRepository(
     private val followedFileName = "followed.txt"
     private val syncInfoFileName = "sync_info.txt"
 
-    /**
-     * Metoda wywoływana przez WorkManagera raz na 24h.
-     * Zapisuje dane DO HISTORII.
-     */
     suspend fun fetchAndSaveHistoricalRates(baseCode: String): Boolean {
         val response = fetchRatesFromApi(baseCode) ?: return false
         
@@ -40,8 +36,8 @@ class CurrencyRepository(
         return true
     }
 
-    suspend fun fetchAndSaveLatestRates(baseCode: String) {
-        val response = fetchRatesFromApi(baseCode) ?: return
+    suspend fun fetchAndSaveLatestRates(baseCode: String): Boolean {
+        val response = fetchRatesFromApi(baseCode) ?: return false
         
         val now = Date()
         val dateOnly = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now)
@@ -55,17 +51,31 @@ class CurrencyRepository(
         }
         latestFile.writeText(latestContent.toString())
         saveLastSyncTime(fullDateTime)
+        return true
     }
 
     private suspend fun fetchRatesFromApi(baseCode: String): com.example.exchange_app.data.remote.HistoricalApiResponse? {
         val apiKey = securityManager.getApiKey()
-        if (apiKey == null || !networkHelper.isInternetAvailable()) return null
+        if (apiKey.isNullOrEmpty()) {
+            Log.e("Repo", "Błąd: Brak klucza API. Przejdź do ustawień i wpisz klucz.")
+            return null
+        }
+        
+        if (!networkHelper.isInternetAvailable()) {
+            Log.e("Repo", "Błąd: Brak połączenia z internetem.")
+            return null
+        }
 
         return try {
             val response = api.getTodayRates(apiKey, baseCode)
-            if (response.isSuccessful) response.body() else null
+            if (response.isSuccessful) {
+                response.body()
+            } else {
+                Log.e("Repo", "Błąd API: ${response.code()} - ${response.message()}")
+                null
+            }
         } catch (e: Exception) {
-            Log.e("Repo", "Błąd sieci: ${e.message}")
+            Log.e("Repo", "Wyjątek podczas pobierania danych: ${e.message}")
             null
         }
     }

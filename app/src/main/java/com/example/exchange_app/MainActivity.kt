@@ -6,12 +6,18 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,7 +32,12 @@ import com.example.exchange_app.ui.theme.Exchange_appTheme
 
 import android.util.Log
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
+import androidx.window.core.layout.WindowWidthSizeClass
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -45,6 +56,12 @@ import com.example.exchange_app.utils.NetworkHelperImpl
 import com.example.exchange_app.worker.DailyRateWorker
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import android.content.res.Configuration
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,10 +125,19 @@ class MainActivity : ComponentActivity() {
 @PreviewScreenSizes
 @Composable
 fun Exchange_appApp() {
+    val context = LocalContext.current
+    val settingsManager = remember { SettingsManager(context) }
+    
     var navStack by rememberSaveable { mutableStateOf(listOf(AppDestinations.HOME)) }
-    var selectedCurrency by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedCurrency by rememberSaveable { 
+        mutableStateOf<String?>(settingsManager.getDefaultCurrency()) 
+    }
 
     val currentDestination = navStack.last()
+    val adaptiveInfo = currentWindowAdaptiveInfo()
+    val isTablet = adaptiveInfo.windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     BackHandler(enabled = navStack.size > 1) {
         navStack = navStack.dropLast(1)
@@ -127,6 +153,7 @@ fun Exchange_appApp() {
     )
 
     NavigationSuiteScaffold(
+        layoutType = NavigationSuiteType.NavigationBar,
         navigationSuiteItems = {
             AppDestinations.entries.forEach {
                 if (it != AppDestinations.DETAILS) {
@@ -156,24 +183,71 @@ fun Exchange_appApp() {
     ) {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)){
-                when (currentDestination) {
-                    AppDestinations.HOME -> MainScreen(onCurrencyClick = {
-                        selectedCurrency = it
-                        if (navStack.last() != AppDestinations.DETAILS) {
-                            navStack = navStack + AppDestinations.DETAILS
+                if (isTablet && (currentDestination == AppDestinations.HOME || currentDestination == AppDestinations.FAVORITES)) {
+                    // Split screen dla tabletu
+                    if (isLandscape) {
+                        Row(modifier = Modifier.fillMaxSize()) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ScreenContent(
+                                    destination = currentDestination,
+                                    selectedCurrency = selectedCurrency,
+                                    onCurrencyClick = { selectedCurrency = it }
+                                )
+                            }
+                            VerticalDivider(
+                                modifier = Modifier.fillMaxHeight().width(1.dp),
+                                color = Color.Gray.copy(alpha = 0.5f)
+                            )
+                            Box(modifier = Modifier.weight(1f)) {
+                                DetailsScreen(currencyCode = selectedCurrency)
+                            }
                         }
-                    })
-                    AppDestinations.FAVORITES -> FavouritesScreen(onCurrencyClick = {
-                        selectedCurrency = it
-                        if (navStack.last() != AppDestinations.DETAILS) {
-                            navStack = navStack + AppDestinations.DETAILS
+                    } else {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ScreenContent(
+                                    destination = currentDestination,
+                                    selectedCurrency = selectedCurrency,
+                                    onCurrencyClick = { selectedCurrency = it }
+                                )
+                            }
+                            HorizontalDivider(
+                                modifier = Modifier.fillMaxWidth().height(1.dp),
+                                color = Color.Gray.copy(alpha = 0.5f)
+                            )
+                            Box(modifier = Modifier.weight(1f)) {
+                                DetailsScreen(currencyCode = selectedCurrency)
+                            }
                         }
-                    })
-                    AppDestinations.DETAILS -> DetailsScreen(currencyCode = selectedCurrency)
-                    AppDestinations.SETTINGS -> SettingScreen()
+                    }
+                } else {
+                    ScreenContent(
+                        destination = currentDestination,
+                        selectedCurrency = selectedCurrency,
+                        onCurrencyClick = {
+                            selectedCurrency = it
+                            if (navStack.last() != AppDestinations.DETAILS) {
+                                navStack = navStack + AppDestinations.DETAILS
+                            }
+                        }
+                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ScreenContent(
+    destination: AppDestinations,
+    selectedCurrency: String?,
+    onCurrencyClick: (String) -> Unit
+) {
+    when (destination) {
+        AppDestinations.HOME -> MainScreen(onCurrencyClick = onCurrencyClick)
+        AppDestinations.FAVORITES -> FavouritesScreen(onCurrencyClick = onCurrencyClick)
+        AppDestinations.DETAILS -> DetailsScreen(currencyCode = selectedCurrency)
+        AppDestinations.SETTINGS -> SettingScreen()
     }
 }
 
