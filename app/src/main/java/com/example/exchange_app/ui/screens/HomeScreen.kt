@@ -55,7 +55,10 @@ fun MainScreen(
     val followedCurrencies = remember(refreshTrigger) { repository.getFollowedCurrencies() }
     val latestRates = remember(refreshTrigger) { repository.getLatestRates() }
     val lastSyncTime = remember(refreshTrigger) { repository.getLastSyncTime() }
-    val isOnline = remember(refreshTrigger) { repository.isOnline() }
+
+    val networkHelper = remember { NetworkHelperImpl(context) }
+    val isOnline by networkHelper.observeInternetAccessibility().collectAsState(initial = networkHelper.isInternetAvailable())
+
     val decimalPlaces = settingsManager.getDecimalPlaces()
 
     val followedRates = remember(followedCurrencies, latestRates) {

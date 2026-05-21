@@ -54,8 +54,10 @@ fun SettingScreen(modifier: Modifier = Modifier) {
     var syncValue by remember { mutableStateOf(settingsManager.getSyncIntervalValue().toString()) }
     var syncUnit by remember { mutableStateOf(settingsManager.getSyncIntervalUnit()) }
     var decimalPlaces by remember { mutableStateOf(settingsManager.getDecimalPlaces().toString()) }
-    
-    val isOnline = repository.isOnline()
+
+
+    val networkHelper = remember { NetworkHelperImpl(context) }
+    val isOnline by networkHelper.observeInternetAccessibility().collectAsState(initial = networkHelper.isInternetAvailable())
     
     val currencies = listOf("PLN", "EUR", "USD")
     val units = mapOf("MINUTES" to "Minuta", "HOURS" to "Godzina", "DAYS" to "Dzień")
