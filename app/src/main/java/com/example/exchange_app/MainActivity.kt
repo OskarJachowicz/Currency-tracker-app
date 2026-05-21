@@ -71,7 +71,6 @@ class MainActivity : ComponentActivity() {
         val settingsManager = SettingsManager(this)
         setupWorkManager(settingsManager)
 
-        // Odświeżanie danych przy starcie aplikacji (jeśli jest internet i klucz)
         val repository = CurrencyRepository(
             (applicationContext as CurrencyApplication).api,
             this,
@@ -107,7 +106,6 @@ class MainActivity : ComponentActivity() {
             else -> TimeUnit.HOURS
         }
 
-        // WorkManager wymaga min. 15 minut
         val finalValue = if (timeUnit == TimeUnit.MINUTES && intervalValue < 15) 15L else intervalValue.toLong()
 
         val syncRequest = PeriodicWorkRequestBuilder<DailyRateWorker>(finalValue, timeUnit)
@@ -134,9 +132,9 @@ fun Exchange_appApp() {
     }
 
     val currentDestination = navStack.last()
-    val adaptiveInfo = currentWindowAdaptiveInfo()
-    val isTablet = adaptiveInfo.windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
     val configuration = LocalConfiguration.current
+    
+    val isTablet = configuration.smallestScreenWidthDp >= 600
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     BackHandler(enabled = navStack.size > 1) {
@@ -184,7 +182,6 @@ fun Exchange_appApp() {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)){
                 if (isTablet && (currentDestination == AppDestinations.HOME || currentDestination == AppDestinations.FAVORITES)) {
-                    // Split screen dla tabletu
                     if (isLandscape) {
                         Row(modifier = Modifier.fillMaxSize()) {
                             Box(modifier = Modifier.weight(1f)) {
