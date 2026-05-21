@@ -66,28 +66,27 @@ fun DetailsScreen(
     )
 
     var selectedRange by rememberSaveable { mutableIntStateOf(1) } // 1, 7, 30 dni
-    val latestRate = remember(currencyCode) { 
+
+    val syncSignal by CurrencyRepository.syncSignal.collectAsState()
+
+    val latestRate = remember(currencyCode, syncSignal) { 
         repository.getLatestRates().find { it.targetCurrency == currencyCode } 
     }
-    val lastSyncTime = remember { repository.getLastSyncTime() }
+    val lastSyncTime = remember(syncSignal) { repository.getLastSyncTime() }
     val decimalPlaces = settingsManager.getDecimalPlaces()
-    
-    // Pobieramy walutę bazową z danych (domyślnie PLN jeśli brak danych)
+
     val baseCurrency = latestRate?.baseCurrency ?: "PLN"
 
-    // ZMIANA: Stały stan, który nie czyści się do zera przy każdej zmianie zakresu
     var historyData by remember { mutableStateOf<List<RateModel>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
 
-    // Pobieranie danych w sposób ciągły (poprawia stabilność przy przełączaniu zakresów)
-    LaunchedEffect(currencyCode, selectedRange, baseCurrency, latestRate) {
+    LaunchedEffect(currencyCode, selectedRange, baseCurrency, latestRate, syncSignal) {
         isLoading = true
         val newData = withContext(Dispatchers.IO) {
             if (currencyCode != null) {
                 val history = repository.getHistoryForCurrency(baseCurrency, currencyCode, selectedRange)
                 val latest = latestRate
-                
-                // Jeśli w historii brakuje dzisiejszego wpisu, a mamy go w latestRate, doklejamy go
+
                 if (latest != null && (history.isEmpty() || history.last().date != latest.date)) {
                     history + latest
                 } else {
@@ -99,8 +98,7 @@ fun DetailsScreen(
         isLoading = false
     }
 
-    // Obliczanie zmiany wartości względem poprzedniego dnia
-    val valueChange = remember(currencyCode) {
+    val valueChange = remember(currencyCode, syncSignal) {
         val historicalRates = repository.getHistoricalRates()
         val latest = latestRate
         if (latest != null) {
@@ -123,7 +121,6 @@ fun DetailsScreen(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Nagłówek: Para walutowa i Nazwa
         Text(
             text = if (currencyCode != null) "$currencyCode/$baseCurrency" else "???",
             fontSize = 42.sp,

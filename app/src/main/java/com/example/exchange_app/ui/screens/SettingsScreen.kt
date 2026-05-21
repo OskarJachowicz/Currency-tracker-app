@@ -69,7 +69,6 @@ fun SettingScreen(modifier: Modifier = Modifier) {
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Nagłówek i Status
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -94,7 +93,6 @@ fun SettingScreen(modifier: Modifier = Modifier) {
             }
         }
 
-        // Sekcja: Waluta bazowa
         SettingsSection(title = "Waluta bazowa", showDivider = true) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -105,7 +103,6 @@ fun SettingScreen(modifier: Modifier = Modifier) {
                         onClick = {
                             baseCurrency = curr
                             settingsManager.saveDefaultCurrency(curr)
-                            // Automatyczne pobranie danych przy zmianie waluty bazowej
                             scope.launch {
                                 repository.fetchAndSaveLatestRates(curr)
                             }
@@ -125,7 +122,6 @@ fun SettingScreen(modifier: Modifier = Modifier) {
             }
         }
 
-        // Sekcja: Odświeżanie historyczne
         SettingsSection(title = "Częstotliwość aktualizacji historii", showDivider = true) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -188,27 +184,25 @@ fun SettingScreen(modifier: Modifier = Modifier) {
             )
         }
 
-        // Sekcja: Formatowanie
         SettingsSection(title = "Liczba miejsc po przecinku", showDivider = true) {
             OutlinedTextField(
                 value = decimalPlaces,
                 onValueChange = {
                     if (it.all { char -> char.isDigit() }) {
                         val num = it.toIntOrNull() ?: 0
-                        if (num <= 5) {
+                        if (num <= 4) {
                             decimalPlaces = it
                             settingsManager.saveDecimalPlaces(num)
                         }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Miejsca po przecinku (maks. 5)") },
+                label = { Text("Miejsca po przecinku (maks. 4)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true
             )
         }
 
-        // Ręczne odświeżanie (bez tytułu sekcji)
         Button(
             onClick = {
                 scope.launch {
@@ -239,7 +233,6 @@ fun SettingScreen(modifier: Modifier = Modifier) {
         }
         HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
 
-        // Sekcja: Klucz API (przeniesiona poniżej przycisku)
         SettingsSection(title = "Klucz API", showDivider = false) {
             var isFocused by remember { mutableStateOf(false) }
             OutlinedTextField(

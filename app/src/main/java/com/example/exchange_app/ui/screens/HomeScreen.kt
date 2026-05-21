@@ -52,9 +52,12 @@ fun MainScreen(
     var refreshTrigger by remember { mutableIntStateOf(0) }
     var isRefreshing by remember { mutableStateOf(false) }
     
-    val followedCurrencies = remember(refreshTrigger) { repository.getFollowedCurrencies() }
-    val latestRates = remember(refreshTrigger) { repository.getLatestRates() }
-    val lastSyncTime = remember(refreshTrigger) { repository.getLastSyncTime() }
+
+    val syncSignal by CurrencyRepository.syncSignal.collectAsState()
+
+    val followedCurrencies = remember(refreshTrigger, syncSignal) { repository.getFollowedCurrencies() }
+    val latestRates = remember(refreshTrigger, syncSignal) { repository.getLatestRates() }
+    val lastSyncTime = remember(refreshTrigger, syncSignal) { repository.getLastSyncTime() }
 
     val networkHelper = remember { NetworkHelperImpl(context) }
     val isOnline by networkHelper.observeInternetAccessibility().collectAsState(initial = networkHelper.isInternetAvailable())

@@ -10,6 +10,9 @@ import java.util.Date
 import java.util.Locale
 import com.example.exchange_app.data.SecurityManager
 import com.example.exchange_app.data.model.RateModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class CurrencyRepository(
     private val api: ExchangeRateApi,
@@ -21,6 +24,15 @@ class CurrencyRepository(
     private val latestFileName = "latest_rates.txt"
     private val followedFileName = "followed.txt"
     private val syncInfoFileName = "sync_info.txt"
+
+    companion object {
+        private val _syncSignal = MutableStateFlow(0)
+        val syncSignal: StateFlow<Int> = _syncSignal.asStateFlow()
+        
+        fun notifySync() {
+            _syncSignal.value += 1
+        }
+    }
 
     suspend fun fetchAndSaveHistoricalRates(baseCode: String): Boolean {
         val response = fetchRatesFromApi(baseCode) ?: return false
@@ -51,6 +63,7 @@ class CurrencyRepository(
         }
         latestFile.writeText(latestContent.toString())
         saveLastSyncTime(fullDateTime)
+        notifySync()
         return true
     }
 
