@@ -268,8 +268,9 @@ fun VicoChart(data: List<RateModel>, decimalPlaces: Int) {
 
     val rangeProvider = remember(minVal, maxVal) {
         val mid = (minVal + maxVal) / 2.0
+        val minValRes = if (mid - 1.0 >= 0.0) mid - 1.0 else 0.0
         CartesianLayerRangeProvider.fixed(
-            minY = mid - 1.0,
+            minY = minValRes,
             maxY = mid + 1.0
         )
     }
