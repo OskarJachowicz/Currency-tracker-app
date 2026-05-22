@@ -143,10 +143,10 @@ fun Exchange_appApp() {
 
     val navSuiteItemColors = NavigationSuiteDefaults.itemColors(
         navigationBarItemColors = NavigationBarItemDefaults.colors(
-            indicatorColor = CustomYellow.copy(alpha = 0.25f)
+            indicatorColor = CustomYellow.copy(alpha = 0.8f)
         ),
         navigationRailItemColors = NavigationRailItemDefaults.colors(
-            indicatorColor = CustomYellow.copy(alpha = 0.25f)
+            indicatorColor = CustomYellow.copy(alpha = 0.8f)
         )
     )
 

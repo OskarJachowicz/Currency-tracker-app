@@ -116,7 +116,6 @@ class CurrencyRepository(
         val historicalRates = getHistoricalRates()
         
         return latestRates.map { latest ->
-            // Znajdź najnowszy wpis w historii z INNĄ datą niż obecny kurs
             val previousRate = historicalRates
                 .filter { 
                     it.baseCurrency == latest.baseCurrency && 
@@ -139,14 +138,10 @@ class CurrencyRepository(
         return parseRatesFromFile(file)
     }
 
-    /**
-     * Pobiera historię kursów dla konkretnej pary walutowej w danym zakresie dni.
-     */
     fun getHistoryForCurrency(baseCurrency: String, targetCurrency: String, days: Int): List<RateModel> {
         val allHistory = getHistoricalRates()
         val now = System.currentTimeMillis()
-        
-        // Zwiększamy zakres o 12h, aby na pewno "złapać" wpis z dnia granicznego
+
         val limit = now - (days.toLong() * 24 * 60 * 60 * 1000) - (24 * 60 * 60 * 1000)
         
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

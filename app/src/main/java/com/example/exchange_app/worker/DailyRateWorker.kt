@@ -19,7 +19,7 @@ class DailyRateWorker(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
-        Log.d("Worker", "WorkManager rozpoczął pracę w tle (dane historyczne)...")
+        Log.d("Worker", "WorkManager rozpoczął pracę w tle")
 
         return try {
             val app = applicationContext as CurrencyApplication

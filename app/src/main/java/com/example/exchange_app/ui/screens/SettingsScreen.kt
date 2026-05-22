@@ -114,9 +114,9 @@ fun SettingScreen(modifier: Modifier = Modifier) {
                             containerColor = if (baseCurrency == curr) CustomYellow else CustomGray,
                             contentColor = if (baseCurrency == curr) Color.Black else Color.White
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(text = curr, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text(text = curr, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

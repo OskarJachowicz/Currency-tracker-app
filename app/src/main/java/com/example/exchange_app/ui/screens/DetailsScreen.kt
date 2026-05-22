@@ -61,11 +61,10 @@ fun DetailsScreen(
         "USD" to "Dolar amerykański",
         "EUR" to "Euro",
         "GBP" to "Funt brytyjski",
-        "JPY" to "Jen japoński",
         "PLN" to "Złoty polski"
     )
 
-    var selectedRange by rememberSaveable { mutableIntStateOf(1) } // 1, 7, 30 dni
+    var selectedRange by rememberSaveable { mutableIntStateOf(1) }
 
     val syncSignal by CurrencyRepository.syncSignal.collectAsState()
 
@@ -134,13 +133,12 @@ fun DetailsScreen(
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
-        // Kurs i Data
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .then(if (isLandscape) Modifier.heightIn(min = 180.dp) else Modifier),
             colors = CardDefaults.cardColors(containerColor = CustomGray),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(12.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -158,8 +156,7 @@ fun DetailsScreen(
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // Wskaźnik zmiany wartości
+
                 ValueTrendIndicator(valueChange, decimalPlaces)
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -200,17 +197,14 @@ fun DetailsScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Wykres
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp) // Zwiększona wysokość dla osi
+                .height(250.dp)
                 .background(CustomGray.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
                 .padding(16.dp)
         ) {
-            // Wykres zostaje na ekranie, dopóki ma co najmniej 2 punkty
             if (historyData.size >= 2) {
-                // key(historyData.size) wymusza bezpieczne odświeżenie przy drastycznych zmianach wielkości danych
                 key(historyData.size) {
                     VicoChart(historyData, decimalPlaces)
                 }
@@ -221,8 +215,7 @@ fun DetailsScreen(
                     color = Color.Gray
                 )
             }
-            
-            // Loader pokazuje się niezależnie od wykresu (zapobiega migotaniu)
+
             if (isLoading && historyData.isEmpty()) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
@@ -233,7 +226,6 @@ fun DetailsScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Źródło danych
         Text(
             text = "Źródło danych: exchangerate-api.com",
             fontSize = 12.sp,
@@ -245,20 +237,16 @@ fun DetailsScreen(
 
 @Composable
 fun VicoChart(data: List<RateModel>, decimalPlaces: Int) {
-    // 1. Tworzymy Model Producer, który zarządza danymi wykresu
     val modelProducer = remember { CartesianChartModelProducer() }
 
-    // 2. Ładujemy dane za każdym razem, gdy lista 'data' się zmieni
     LaunchedEffect(data) {
         modelProducer.runTransaction {
             lineSeries {
-                // Wyciągamy same wartości 'rate' z Twojego modelu
                 series(data.map { it.rate })
             }
         }
     }
 
-    // 3. Nowy sposób formatowania osi X (daty) z zabezpieczeniem indeksu
     val bottomAxisFormatter = remember(data) {
         CartesianValueFormatter { _, value, _ ->
             val index = value.toInt()
@@ -268,7 +256,6 @@ fun VicoChart(data: List<RateModel>, decimalPlaces: Int) {
         }
     }
 
-    // 4. Nowy sposób formatowania osi Y (kursy)
     val startAxisFormatter = remember(decimalPlaces) {
         CartesianValueFormatter { _, value, _ ->
             String.format("%.${decimalPlaces}f", value)
@@ -287,12 +274,11 @@ fun VicoChart(data: List<RateModel>, decimalPlaces: Int) {
         )
     }
 
-    // 6. Rysowanie wykresu nowym silnikiem Cartesian
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
                 rangeProvider = rangeProvider
-            ), // Rysuje linię
+            ),
             startAxis = VerticalAxis.rememberStart(
                 valueFormatter = startAxisFormatter
             ),
@@ -349,12 +335,12 @@ fun RangeButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.height(48.dp), // Powiększona wysokość
+        modifier = modifier.height(48.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) CustomYellow else CustomGray,
             contentColor = if (isSelected) Color.Black else Color.White
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(0.dp)
     ) {
         Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold)

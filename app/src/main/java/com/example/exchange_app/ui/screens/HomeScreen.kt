@@ -1,5 +1,6 @@
 package com.example.exchange_app.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -196,6 +197,7 @@ fun FollowedRateItem(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun TrendIndicator(trend: Double?) {
     val (color, icon, text) = when {
