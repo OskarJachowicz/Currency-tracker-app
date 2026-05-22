@@ -62,6 +62,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.exchange_app.nav.ExchangeAppNavigation
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,7 +87,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Exchange_appTheme {
-                Exchange_appApp()
+                ExchangeAppNavigation()
             }
         }
     }
@@ -118,142 +119,4 @@ class MainActivity : ComponentActivity() {
             syncRequest
         )
     }
-}
-
-@PreviewScreenSizes
-@Composable
-fun Exchange_appApp() {
-    val context = LocalContext.current
-    val settingsManager = remember { SettingsManager(context) }
-    
-    var navStack by rememberSaveable { mutableStateOf(listOf(AppDestinations.HOME)) }
-    var selectedCurrency by rememberSaveable { 
-        mutableStateOf<String?>(settingsManager.getDefaultCurrency()) 
-    }
-
-    val currentDestination = navStack.last()
-    val configuration = LocalConfiguration.current
-    
-    val isTablet = configuration.smallestScreenWidthDp >= 600
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-    BackHandler(enabled = navStack.size > 1) {
-        navStack = navStack.dropLast(1)
-    }
-
-    val navSuiteItemColors = NavigationSuiteDefaults.itemColors(
-        navigationBarItemColors = NavigationBarItemDefaults.colors(
-            indicatorColor = CustomYellow.copy(alpha = 0.8f)
-        ),
-        navigationRailItemColors = NavigationRailItemDefaults.colors(
-            indicatorColor = CustomYellow.copy(alpha = 0.8f)
-        )
-    )
-
-    NavigationSuiteScaffold(
-        layoutType = NavigationSuiteType.NavigationBar,
-        navigationSuiteItems = {
-            AppDestinations.entries.forEach {
-                if (it != AppDestinations.DETAILS) {
-                    item(
-                        icon = {
-                            Icon(
-                                painterResource(it.icon),
-                                contentDescription = it.label
-                            )
-                        },
-                        label = { Text(it.label) },
-                        selected = it == currentDestination,
-                        onClick = { 
-                            if (it != currentDestination) {
-                                navStack = if (navStack.contains(it)) {
-                                    navStack.take(navStack.indexOf(it) + 1)
-                                } else {
-                                    navStack + it
-                                }
-                            }
-                        },
-                        colors = navSuiteItemColors
-                    )
-                }
-            }
-        }
-    ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)){
-                if (isTablet && (currentDestination == AppDestinations.HOME || currentDestination == AppDestinations.FAVORITES)) {
-                    if (isLandscape) {
-                        Row(modifier = Modifier.fillMaxSize()) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                ScreenContent(
-                                    destination = currentDestination,
-                                    selectedCurrency = selectedCurrency,
-                                    onCurrencyClick = { selectedCurrency = it }
-                                )
-                            }
-                            VerticalDivider(
-                                modifier = Modifier.fillMaxHeight().width(1.dp),
-                                color = Color.Gray.copy(alpha = 0.5f)
-                            )
-                            Box(modifier = Modifier.weight(1f)) {
-                                DetailsScreen(currencyCode = selectedCurrency)
-                            }
-                        }
-                    } else {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                ScreenContent(
-                                    destination = currentDestination,
-                                    selectedCurrency = selectedCurrency,
-                                    onCurrencyClick = { selectedCurrency = it }
-                                )
-                            }
-                            HorizontalDivider(
-                                modifier = Modifier.fillMaxWidth().height(1.dp),
-                                color = Color.Gray.copy(alpha = 0.5f)
-                            )
-                            Box(modifier = Modifier.weight(1f)) {
-                                DetailsScreen(currencyCode = selectedCurrency)
-                            }
-                        }
-                    }
-                } else {
-                    ScreenContent(
-                        destination = currentDestination,
-                        selectedCurrency = selectedCurrency,
-                        onCurrencyClick = {
-                            selectedCurrency = it
-                            if (navStack.last() != AppDestinations.DETAILS) {
-                                navStack = navStack + AppDestinations.DETAILS
-                            }
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ScreenContent(
-    destination: AppDestinations,
-    selectedCurrency: String?,
-    onCurrencyClick: (String) -> Unit
-) {
-    when (destination) {
-        AppDestinations.HOME -> MainScreen(onCurrencyClick = onCurrencyClick)
-        AppDestinations.FAVORITES -> FavouritesScreen(onCurrencyClick = onCurrencyClick)
-        AppDestinations.DETAILS -> DetailsScreen(currencyCode = selectedCurrency)
-        AppDestinations.SETTINGS -> SettingScreen()
-    }
-}
-
-enum class AppDestinations(
-    val label: String,
-    val icon: Int,
-) {
-    HOME("Dom", R.drawable.ic_home),
-    FAVORITES("Obserwowane", R.drawable.ic_favourite),
-    DETAILS("Szczegóły", R.drawable.ic_details),
-    SETTINGS("Ustawienia", R.drawable.ic_settings),
 }
