@@ -1,60 +1,127 @@
-# Currency Rate Tracking App
+<div align="center">
 
-An Android application for tracking real-time currency exchange rates and analyzing historical trends. The project is built using **Jetpack Compose** and modern Kotlin development standards.
+# Currency Rate Tracker
+
+**An Android app for tracking exchange rates, following currencies, and exploring historical trends.**
+
+![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![Android](https://img.shields.io/badge/Android-API_30%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
+![Retrofit](https://img.shields.io/badge/Retrofit-3.0-48B983?style=for-the-badge)
+![WorkManager](https://img.shields.io/badge/WorkManager-Background_tasks-6C4AB6?style=for-the-badge)
+
+</div>
 
 ---
+
+## Overview
+
+Currency Rate Tracker is a native Android application built with Kotlin and Jetpack Compose. It retrieves exchange rates from [ExchangeRate-API](https://www.exchangerate-api.com/), keeps a local history for charting, and lets you follow selected currencies.
 
 ## Screenshots
 
 <p align="center">
-  <img src="./assets/sc_home.jpg" width="180" alt="home screen"/>
-  <img src="./assets/sc_details.jpg" width="180" alt="currency details screen"/>
-  <img src="./assets/sc_followed.jpg" width="180" alt="followed screen"/>
+  <span style="display:inline-block; margin:10px; padding:8px 6px; border:4px solid #252525; border-radius:28px; background:#111;">
+    <span style="display:block; width:44px; height:5px; margin:0 auto 8px; border-radius:5px; background:#555;"></span>
+    <img src="./assets/sc_home.jpg" width="180" alt="Home screen showing followed exchange rates" style="display:block; border-radius:16px;" />
+  </span>
+  <span style="display:inline-block; margin:10px; padding:8px 6px; border:4px solid #252525; border-radius:28px; background:#111;">
+    <span style="display:block; width:44px; height:5px; margin:0 auto 8px; border-radius:5px; background:#555;"></span>
+    <img src="./assets/sc_details.jpg" width="180" alt="Currency details and historical chart" style="display:block; border-radius:16px;" />
+  </span>
+  <span style="display:inline-block; margin:10px; padding:8px 6px; border:4px solid #252525; border-radius:28px; background:#111;">
+    <span style="display:block; width:44px; height:5px; margin:0 auto 8px; border-radius:5px; background:#555;"></span>
+    <img src="./assets/sc_followed.jpg" width="180" alt="Followed currencies screen" style="display:block; border-radius:16px;" />
+  </span>
 </p>
 
 <p align="center">
-  <img src="./assets/sc_settings.jpg" width="180" alt="settings screen"/>
-  <img src="./assets/sc_settings2.jpg" width="180" alt="settings screen"/>
+  <span style="display:inline-block; margin:10px; padding:8px 6px; border:4px solid #252525; border-radius:28px; background:#111;">
+    <span style="display:block; width:44px; height:5px; margin:0 auto 8px; border-radius:5px; background:#555;"></span>
+    <img src="./assets/sc_settings.jpg" width="180" alt="Application settings" style="display:block; border-radius:16px;" />
+  </span>
+  <span style="display:inline-block; margin:10px; padding:8px 6px; border:4px solid #252525; border-radius:28px; background:#111;">
+    <span style="display:block; width:44px; height:5px; margin:0 auto 8px; border-radius:5px; background:#555;"></span>
+    <img src="./assets/sc_settings2.jpg" width="180" alt="Additional application settings" style="display:block; border-radius:16px;" />
+  </span>
 </p>
 
----
+## Features
 
-## Key Features
+| Exchange rates and insights | Personalization and reliability |
+| --- | --- |
+| Current exchange rates with percentage trend indicators | Search and follow currencies in a personal watchlist |
+| Historical charts with day, week, and month views | Choose PLN, USD, or EUR as the base currency |
+| Pull-to-refresh and last-sync information | Configure automatic history updates and displayed decimal places |
+| Online/offline connection status | Store rates locally for access between refreshes |
+| Background history updates using WorkManager | Protect the API key with encrypted preferences |
 
-- **Home Screen**: Overview of tracked currencies with dynamic trend indicators (gains/losses), date information, and last synchronization timestamp.
-- **Search & Favorites**: Currency search and management of a personalized watchlist.
-- **Charts**: Line charts for analyzing exchange rate changes over day, week, and month intervals.
-- **Background Automation**: **WorkManager** handles daily automatic fetching of historical data.
-- **Full Configuration**: Ability to change base currency, display format, and refresh frequency.
-- **Security**: API key stored securely using **EncryptedSharedPreferences**.
+## Tech Stack
 
----
+- **Language:** Kotlin
+- **UI:** Jetpack Compose, Material 3, adaptive navigation
+- **Networking:** Retrofit and Gson
+- **Charts:** Vico
+- **Background tasks:** AndroidX WorkManager
+- **Local storage:** App-internal files and SharedPreferences
+- **API key storage:** AndroidX Security Crypto
+- **Build system:** Gradle with Kotlin DSL and a version catalog
 
-## Technologies Used
+## Requirements
 
-- **Language**: Kotlin
-- **UI**: Jetpack Compose (Material 3)
-- **Networking**: Retrofit 2 + GSON
-- **Charts**: Vico Charts
-- **Background Work**: WorkManager
-- **Storage**: SharedPreferences, EncryptedSharedPreferences & Internal File Storage
-- **Security**: AndroidX Security Crypto
+- Android Studio with support for Android Gradle Plugin 9.1.1
+- JDK 17 or later
+- Android SDK Platform 36.1
+- An Android device or emulator running Android 11 (API 30) or later
+- An API key from [ExchangeRate-API](https://www.exchangerate-api.com/)
 
----
+## Getting Started
 
-## Setup
+### 1. Open the project
 
-1. Get a free API key from [exchangerate-api.com](https://www.exchangerate-api.com/).
-2. Launch the app and go to **Settings**.
-3. Paste your API key into the **API Key** field.
-4. Refresh the data using the refresh button.
+Open the `Currency-tracker-app` directory in Android Studio and allow Gradle to sync.
 
----
+### 2. Build and run
 
-## Data Structure
+Run the `app` configuration from Android Studio, or build a debug APK from the project directory:
 
-The app uses local text files for offline functionality:
+```powershell
+.\gradlew.bat :app:assembleDebug
+```
 
-- `latest_rates.txt`: Latest fetched exchange rate data.
-- `historical_rates.txt`: Historical data used for charts.
-- `followed.txt`: List of user-followed currencies.
+On macOS or Linux, use:
+
+```bash
+./gradlew :app:assembleDebug
+```
+
+### 3. Add your API key
+
+Launch the app, open **Settings**, and enter your ExchangeRate-API key in the **API Key** field. The key is stored using AndroidX EncryptedSharedPreferences. Once configured, refresh rates from the home screen.
+
+## Data and Updates
+
+The app stores its data in its private internal storage; no database setup is required.
+
+| File | Purpose |
+| --- | --- |
+| `latest_rates.txt` | Most recently fetched rates for the selected base currency |
+| `historical_rates.txt` | Rate history used to calculate trends and populate charts |
+| `followed.txt` | Currency codes in the watchlist |
+| `sync_info.txt` | Timestamp of the last successful latest-rate update |
+
+The update interval can be configured in **Settings**. WorkManager requires a minimum interval of 15 minutes, and changes to the schedule take effect after restarting the app. Background history collection currently fetches rates based on PLN, USD, and EUR.
+
+## Project Structure
+
+| Path | Purpose |
+| --- | --- |
+| `app/src/main/java/com/example/exchange_app/data/` | Settings, API-key security, models, and currency repository |
+| `app/src/main/java/com/example/exchange_app/data/remote/` | ExchangeRate-API service and response models |
+| `app/src/main/java/com/example/exchange_app/ui/screens/` | Home, favorites, details, and settings screens |
+| `app/src/main/java/com/example/exchange_app/nav/` | App destinations and navigation |
+| `app/src/main/java/com/example/exchange_app/worker/` | Scheduled background rate-history updates |
+| `app/src/main/res/` | App icons, themes, colors, and other Android resources |
+| `app/src/test/` | Local unit tests |
+| `app/src/androidTest/` | Instrumented Android tests |
+| `assets/` | README screenshots |
